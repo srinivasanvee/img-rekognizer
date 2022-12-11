@@ -12,50 +12,29 @@ import java.util.List;
 
 public class ImageRekognizer {
     List<String> res_labels = new ArrayList<>();
-    private MultipartFile fileToProcess;
-    private String filePath;
 
-    private byte[] imageBytes;
-
-    public ImageRekognizer() {}
-
-    public ImageRekognizer(String filePath)
-    {
-        this.filePath = filePath;
+    public List<String> getLabelsByFilePath(String filePath) throws IOException {
+        var input = new FileInputStream(filePath).readAllBytes();
+        Image img = new Image().withBytes(ByteBuffer.wrap(input));
+        return this.rekognize(img);
     }
 
-    public ImageRekognizer(byte[] bytes)
-    {
-        this.imageBytes = bytes;
+    public List<String> getLabelsByMultiPartFile(MultipartFile file) throws IOException {
+        Image img = new Image().withBytes(ByteBuffer.wrap(file.getBytes()));
+        return this.rekognize(img);
     }
 
-    public ImageRekognizer(MultipartFile file)
-    {
-        this.fileToProcess = file;
+    public List<String> getLabelsByS3Obj(String bucket, String file) throws IOException {
+        Image img = new Image().withS3Object(new S3Object().withName(file).withBucket(bucket));
+        return this.rekognize(img);
     }
 
-    private Image getImage() throws IOException {
-        if (fileToProcess != null)
-        {
-            return new Image().withBytes(ByteBuffer.wrap(this.fileToProcess.getBytes()));
-        }
-        else if(filePath != null) {
-            var input = new FileInputStream(this.filePath).readAllBytes();
-            return new Image().withBytes(ByteBuffer.wrap(input));
-        }
-        {
-            String photo = "cat_img.png";
-            String bucket = "sri-photo-bucket";
-            return new Image().withS3Object(new S3Object().withName(photo).withBucket(bucket));
-        }
-    }
-
-    public List<String> rekognize() throws IOException {
+    private List<String> rekognize(Image image) throws IOException {
 
         AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder.defaultClient();
 
         DetectLabelsRequest request = new DetectLabelsRequest()
-                .withImage(getImage())
+                .withImage(image)
                 .withMaxLabels(10).withMinConfidence(75F);
 
         try {

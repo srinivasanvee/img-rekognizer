@@ -11,18 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/*
-TODO:
- - Image upload
- - Image Processing
- - Dependency injection
- - Unit testing
- - Error handling
- - Validation
- - Readme.md with instructions
- - Build UI for demo
-  */
-
 @RestController
 public class ImageController {
 
@@ -45,11 +33,10 @@ public class ImageController {
     }
 
     @PostMapping(path = "/images")
-    public ResponseEntity<Image> postRawImage(@RequestParam("image")MultipartFile file) throws IOException {
+    public Image postRawImage(@RequestParam("image")MultipartFile file) throws IOException {
         Image image = this.imageProcessor.saveImage(file);
         var resp = this.imageRepository.save(image);
-        var url = "/images/" + resp.getId().toString();
-        return ResponseEntity.created(URI.create(url)).build();
+        return resp;
     }
 
     @GetMapping(path = "/images/search/{searchStr}")
