@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /*
@@ -43,11 +44,26 @@ public class ImageController {
         return this.imageRepository.findById(id).get();
     }
 
-    @PostMapping(path = "/image")
+    @PostMapping(path = "/images")
     public ResponseEntity<Image> postRawImage(@RequestParam("image")MultipartFile file) throws IOException {
         Image image = this.imageProcessor.saveImage(file);
         var resp = this.imageRepository.save(image);
         var url = "/images/" + resp.getId().toString();
         return ResponseEntity.created(URI.create(url)).build();
+    }
+
+    @GetMapping(path = "/images/search/{searchStr}")
+    public List<Image> searchImages(@PathVariable String searchStr) throws IOException {
+        String[] searchObj = searchStr.split(",");
+        List<Image> result = new ArrayList<>();
+
+        for(Image img: this.imageRepository.findAll()) {
+            for(String search: searchObj) {
+                if(img.getObjectType().toLowerCase().contains(search.toLowerCase())) {
+                    result.add(img);
+                }
+            }
+        }
+        return result;
     }
 }
